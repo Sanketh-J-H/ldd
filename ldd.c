@@ -1,4 +1,4 @@
-#include <linux/init.h>    // Provides Linux kernel module init and exit macros
+#include <linux/init.h>    // Provides Linux kernel module_init and module_exit macros
 #include <linux/module.h>  // Core header for Linux kernel modules
 #include <linux/proc_fs.h> // Provides /proc filesystem functionality
 #include <linux/uaccess.h> // Required for copy_to_user function
