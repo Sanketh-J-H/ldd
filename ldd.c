@@ -43,8 +43,10 @@ static ssize_t ldd_read_proc(struct file *file_pointer, char __user *user_space_
         return 0; // EOF or nothing to read
     }
 
-    if (copy_to_user(user_space_buffer, message_buffer, len))
+    if (copy_to_user(user_space_buffer, message_buffer, len)) {
+        printk(KERN_ERR "ldd_read_proc: copy_to_user failed\n");
         return -EFAULT;
+    }
 
     *offset += len;
     printk("ldd_read_proc: exit\n");
@@ -71,12 +73,16 @@ static ssize_t ldd_read_proc(struct file *file_pointer, char __user *user_space_
 static ssize_t ldd_write_proc(struct file *file_pointer, const char __user *user_space_buffer, size_t count, loff_t *offset)
 {
     printk("ldd_write_proc: entry\n");
-    // message_buffer[MAX_INPUT_SIZE + 1]; // +1 for null terminator
-    if (count > MAX_INPUT_SIZE)
+    
+    if (count > MAX_INPUT_SIZE) {
+        printk(KERN_WARNING "ldd_write_proc: input truncated from %zu to %d bytes\n", count, MAX_INPUT_SIZE);
         count = MAX_INPUT_SIZE;
+    }
 
-    if (copy_from_user(message_buffer, user_space_buffer, count))
+    if (copy_from_user(message_buffer, user_space_buffer, count)) {
+        printk(KERN_ERR "ldd_write_proc: copy_from_user failed\n");
         return -EFAULT;
+    }
 
     message_buffer[count] = '\0'; // Null-terminate the string
     printk("ldd_write_proc: received: %s\n", message_buffer);
@@ -92,7 +98,8 @@ static ssize_t ldd_write_proc(struct file *file_pointer, const char __user *user
  */
 struct proc_ops driver_proc_ops = {
     .proc_read = ldd_read_proc,
-    .proc_write = ldd_write_proc};
+    .proc_write = ldd_write_proc
+};
 
 /**
  * @brief Initialization function for the LDD demo driver module
@@ -108,15 +115,15 @@ struct proc_ops driver_proc_ops = {
  */
 static int __init mydrv_init(void)
 {
-    /* allocate numbers, create device, init hw, request irq, etc */
-    printk("Hello you are loading the ldd module! : entry\n");
-    custom_proc_node = proc_create("ldd_demo_driver", 0, NULL, &driver_proc_ops);
-    if (!custom_proc_node)
-    {
-        printk("Failed to create /proc entry\n");
-        return -1;
+    printk(KERN_INFO "Hello you are loading the ldd module!: entry\n");
+    
+    custom_proc_node = proc_create("ldd_demo_driver", 0644, NULL, &driver_proc_ops);
+    if (!custom_proc_node) {
+        printk(KERN_ERR "Failed to create /proc entry\n");
+        return -ENOMEM;
     }
-    printk("ldd module loading: exit\n");
+    
+    printk(KERN_INFO "ldd module loading: exit\n");
     return 0;
 }
 
@@ -133,12 +140,15 @@ static int __init mydrv_init(void)
  */
 static void __exit mydrv_exit(void)
 {
-    /* reverse everything done in init */
-    printk("ldd module unloading: entry\n");
-    proc_remove(custom_proc_node);
-    printk("ldd module unloading: exit\n");
+    printk(KERN_INFO "ldd module unloading: entry\n");
+    
+    if (custom_proc_node) {
+        proc_remove(custom_proc_node);
+        custom_proc_node = NULL;
+    }
+    
+    printk(KERN_INFO "ldd module unloading: exit\n");
 }
 
-// Macros for registering module entry and exit points
 module_init(mydrv_init);
 module_exit(mydrv_exit);
