@@ -1,15 +1,15 @@
-#include <linux/init.h>    // Provides Linux kernel module_init and module_exit macros
+#include <linux/init.h>    // Provides Linux kernel module_init, module_exit, __init, __exit macros etc.
 #include <linux/module.h>  // Core header for Linux kernel modules e.g ., MODULE_LICENSE, MODULE_AUTHOR, MODULE_DESCRIPTION, etc.
 #include <linux/kernel.h>  // Provides kernel info e.g., printk
 #include <linux/proc_fs.h> // Provides /proc filesystem functionality e.g., proc_create, proc_remove
 #include <linux/uaccess.h> // Provides copy_to_user and copy_from_user functions
-
+ 
 MODULE_LICENSE("GPL");                                      // this is a must
 MODULE_AUTHOR("Sanketh J H");                               // optional
 MODULE_DESCRIPTION("My first Dynamically loadable module"); // optional
 
 // Maximum size for input from user space
-#define MAX_INPUT_SIZE 128
+#define MAX_INPUT_SIZE 256
 
 /**
  * @brief Pointer to custom proc file entry structure
@@ -18,7 +18,7 @@ MODULE_DESCRIPTION("My first Dynamically loadable module"); // optional
  * represents a custom node in the /proc filesystem. The proc_dir_entry
  * structure contains information about the proc file including permissions,
  * owner, and operations that can be performed on it.
- */
+**/
 static struct proc_dir_entry *custom_proc_node;
 
 // Buffer to hold messages exchanged between user space and kernel space
